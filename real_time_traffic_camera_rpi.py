@@ -28,8 +28,8 @@ font_scale = 1
 font_color = (255, 255, 255)    # White color for text
 background_color = (0, 0, 255)  # Red background for text
 
-# Open the camera using OpenCV (libcamera interface for Raspberry Pi)
-cap = cv2.VideoCapture(0, cv2.CAP_V4L2)
+# Open the camera using OpenCV (default interface)
+cap = cv2.VideoCapture(0)
 
 # Set camera resolution (adjust to match your needs)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
