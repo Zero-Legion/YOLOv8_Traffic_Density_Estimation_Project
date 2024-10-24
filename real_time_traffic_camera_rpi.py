@@ -27,17 +27,17 @@ font = cv2.FONT_HERSHEY_SIMPLEX
 font_scale = 1
 font_color = (255, 255, 255)    # White color for text
 background_color = (0, 0, 255)  # Red background for text
-        
-# Open the camera feed (0 for the default camera, or use another number for external cameras)
-cap = cv2.VideoCapture(0)
 
-# Get the width and height of the frame from the camera
-frame_width = int(cap.get(3))
-frame_height = int(cap.get(4))
+# Open the Raspberry Pi camera
+cap = cv2.VideoCapture(0)  # 0 for the camera module on Raspberry Pi
+
+# Set camera resolution (Optional, depending on your requirements)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)  # Set width
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)  # Set height
 
 # Define the codec and create a VideoWriter object for saving the output video
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
-out = cv2.VideoWriter('processed_camera_feed.avi', fourcc, 20.0, (frame_width, frame_height))
+out = cv2.VideoWriter('processed_camera_feed.avi', fourcc, 20.0, (1280, 720))  # Adjusted to match camera resolution
 
 # Read until the camera feed is open
 while cap.isOpened():
