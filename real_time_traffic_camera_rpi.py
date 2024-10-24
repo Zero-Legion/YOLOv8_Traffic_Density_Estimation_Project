@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 from ultralytics import YOLO
-from picamera2 import Picamera2
 
 # Load the best fine-tuned YOLOv8 model
 best_model = YOLO('models/best.pt')
@@ -14,7 +13,7 @@ vertices1 = np.array([(465, 350), (609, 350), (510, 630), (2, 630)], dtype=np.in
 vertices2 = np.array([(678, 350), (815, 350), (1203, 630), (743, 630)], dtype=np.int32)
 
 # Define the vertical range for the slice and lane threshold
-x1, x2 = 325, 635 
+x1, x2 = 325, 635
 lane_threshold = 609
 
 # Define the positions for the text annotations on the image
@@ -29,35 +28,44 @@ font_scale = 1
 font_color = (255, 255, 255)    # White color for text
 background_color = (0, 0, 255)  # Red background for text
 
-# Initialize the Picamera2 object
-picam2 = Picamera2()
-config = picam2.create_preview_configuration(main={"format": "RGB888", "size": (1280, 720)})
-picam2.configure(config)
-picam2.start()
+# Open the camera using OpenCV with libcamera (default index 0 for libcamera)
+cap = cv2.VideoCapture(0)
+
+# Get the width and height of the frame from the camera
+frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
 # Define the codec and create a VideoWriter object for saving the output video
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
-out = cv2.VideoWriter('processed_camera_feed.avi', fourcc, 20.0, (1280, 720))
+out = cv2.VideoWriter('processed_camera_feed.avi', fourcc, 20.0, (frame_width, frame_height))
 
-# Capture and process frames in a loop
+# Check if the camera is opened successfully
+if not cap.isOpened():
+    print("Error: Could not open video capture.")
+    exit()
+
+# Read until the camera feed is open
 while True:
-    # Capture frame-by-frame from the Raspberry Pi camera
-    frame = picam2.capture_array()
+    # Capture frame-by-frame
+    ret, frame = cap.read()
+    if not ret:
+        print("Error: Failed to capture image.")
+        break
 
     # Create a copy of the original frame to modify
     detection_frame = frame.copy()
-    
+
     # Black out the regions outside the specified vertical range
     detection_frame[:x1, :] = 0  # Black out from top to x1
     detection_frame[x2:, :] = 0  # Black out from x2 to the bottom of the frame
-    
+
     # Perform inference on the modified frame
     results = best_model.predict(detection_frame, imgsz=640, conf=0.4)
     processed_frame = results[0].plot(line_width=1)
-    
+
     # Restore the original top and bottom parts of the frame
     processed_frame[:x1, :] = frame[:x1, :].copy()
-    processed_frame[x2:, :] = frame[x2:, :].copy()        
+    processed_frame[x2:, :] = frame[x2:, :].copy()
 
     # Draw the quadrilaterals on the processed frame
     cv2.polylines(processed_frame, [vertices1], isClosed=True, color=(0, 255, 0), thickness=2)
@@ -84,35 +92,35 @@ while True:
     traffic_intensity_right = "Heavy" if vehicles_in_right_lane > heavy_traffic_threshold else "Smooth"
 
     # Add a background rectangle for the left lane vehicle count
-    cv2.rectangle(processed_frame, (text_position_left_lane[0]-10, text_position_left_lane[1] - 25), 
+    cv2.rectangle(processed_frame, (text_position_left_lane[0] - 10, text_position_left_lane[1] - 25),
                   (text_position_left_lane[0] + 460, text_position_left_lane[1] + 10), background_color, -1)
 
     # Add the vehicle count text on top of the rectangle for the left lane
-    cv2.putText(processed_frame, f'Vehicles in Left Lane: {vehicles_in_left_lane}', text_position_left_lane, 
+    cv2.putText(processed_frame, f'Vehicles in Left Lane: {vehicles_in_left_lane}', text_position_left_lane,
                 font, font_scale, font_color, 2, cv2.LINE_AA)
 
     # Add a background rectangle for the left lane traffic intensity
-    cv2.rectangle(processed_frame, (intensity_position_left_lane[0]-10, intensity_position_left_lane[1] - 25), 
+    cv2.rectangle(processed_frame, (intensity_position_left_lane[0] - 10, intensity_position_left_lane[1] - 25),
                   (intensity_position_left_lane[0] + 460, intensity_position_left_lane[1] + 10), background_color, -1)
 
     # Add the traffic intensity text on top of the rectangle for the left lane
-    cv2.putText(processed_frame, f'Traffic Intensity: {traffic_intensity_left}', intensity_position_left_lane, 
+    cv2.putText(processed_frame, f'Traffic Intensity: {traffic_intensity_left}', intensity_position_left_lane,
                 font, font_scale, font_color, 2, cv2.LINE_AA)
 
     # Add a background rectangle for the right lane vehicle count
-    cv2.rectangle(processed_frame, (text_position_right_lane[0]-10, text_position_right_lane[1] - 25), 
+    cv2.rectangle(processed_frame, (text_position_right_lane[0] - 10, text_position_right_lane[1] - 25),
                   (text_position_right_lane[0] + 460, text_position_right_lane[1] + 10), background_color, -1)
 
     # Add the vehicle count text on top of the rectangle for the right lane
-    cv2.putText(processed_frame, f'Vehicles in Right Lane: {vehicles_in_right_lane}', text_position_right_lane, 
+    cv2.putText(processed_frame, f'Vehicles in Right Lane: {vehicles_in_right_lane}', text_position_right_lane,
                 font, font_scale, font_color, 2, cv2.LINE_AA)
 
     # Add a background rectangle for the right lane traffic intensity
-    cv2.rectangle(processed_frame, (intensity_position_right_lane[0]-10, intensity_position_right_lane[1] - 25), 
+    cv2.rectangle(processed_frame, (intensity_position_right_lane[0] - 10, intensity_position_right_lane[1] - 25),
                   (intensity_position_right_lane[0] + 460, intensity_position_right_lane[1] + 10), background_color, -1)
 
     # Add the traffic intensity text on top of the rectangle for the right lane
-    cv2.putText(processed_frame, f'Traffic Intensity: {traffic_intensity_right}', intensity_position_right_lane, 
+    cv2.putText(processed_frame, f'Traffic Intensity: {traffic_intensity_right}', intensity_position_right_lane,
                 font, font_scale, font_color, 2, cv2.LINE_AA)
 
     # Display the processed frame
@@ -125,7 +133,9 @@ while True:
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-# Stop the camera and close the windows
-picam2.stop()
+# Release the camera and video write objects
+cap.release()
 out.release()
+
+# Close all the frames
 cv2.destroyAllWindows()
