@@ -11,7 +11,7 @@ heavy_traffic_threshold = 10
 # Define the vertices for the quadrilaterals
 vertices1 = np.array([(465, 350), (609, 350), (510, 630), (2, 630)], dtype=np.int32)
 vertices2 = np.array([(678, 350), (815, 350), (1203, 630), (743, 630)], dtype=np.int32)
-
+ 
 # Define the vertical range for the slice and lane threshold
 x1, x2 = 325, 635 
 lane_threshold = 609

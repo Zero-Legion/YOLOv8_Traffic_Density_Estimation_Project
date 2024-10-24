@@ -15,7 +15,7 @@ vertices2 = np.array([(678, 350), (815, 350), (1203, 630), (743, 630)], dtype=np
 # Define the vertical range for the slice and lane threshold
 x1, x2 = 325, 635
 lane_threshold = 609
-
+ 
 # Define the positions for the text annotations on the image
 text_position_left_lane = (10, 50)
 text_position_right_lane = (820, 50)
