@@ -28,8 +28,8 @@ font_scale = 1
 font_color = (255, 255, 255)    # White color for text
 background_color = (0, 0, 255)  # Red background for text
 
-# Open the camera using OpenCV (default interface)
-cap = cv2.VideoCapture(0)
+# Open the camera using OpenCV with libcamera support
+cap = cv2.VideoCapture('libcamera', cv2.CAP_V4L2)
 
 # Set camera resolution (adjust to match your needs)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
