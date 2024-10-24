@@ -1,17 +1,6 @@
 import cv2
 import numpy as np
 from ultralytics import YOLO
-from picamera2 import Picamera2
-
-# Initialize Picamera2
-picam2 = Picamera2()
-
-# Configure camera settings (640x480 is a typical resolution, you can adjust it as needed)
-config = picam2.create_preview_configuration(main={"size": (640, 480)})
-picam2.configure(config)
-
-# Start the camera
-picam2.start()
 
 # Load the fine-tuned YOLOv8 model
 best_model = YOLO('models/best.pt')
@@ -39,10 +28,26 @@ font_scale = 1
 font_color = (255, 255, 255)    # White color for text
 background_color = (0, 0, 255)  # Red background for text
 
+# Open the camera using OpenCV (libcamera interface for Raspberry Pi)
+cap = cv2.VideoCapture(0, cv2.CAP_V4L2)
+
+# Set camera resolution (adjust to match your needs)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
+# Check if camera opened successfully
+if not cap.isOpened():
+    print("Error: Could not open camera.")
+    exit()
+
 # Loop to continuously get frames from the camera
 while True:
-    # Capture a frame from the camera using picamera2
-    frame = picam2.capture_array()
+    # Capture a frame from the camera
+    ret, frame = cap.read()
+
+    if not ret:
+        print("Error: Failed to capture frame.")
+        break
 
     # Create a copy of the original frame to modify
     detection_frame = frame.copy()
@@ -122,6 +127,6 @@ while True:
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-# Stop the camera and close the OpenCV window
-picam2.stop()
+# Release the camera and close all OpenCV windows
+cap.release()
 cv2.destroyAllWindows()
